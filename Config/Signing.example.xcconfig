@@ -1,0 +1,18 @@
+// Signing.example.xcconfig
+//
+// Template for local signing configuration.
+//
+// Copy this file to `Config/Signing.xcconfig` and fill in your own Apple
+// Developer Team ID. That file is gitignored, so your team identifier never
+// leaves your machine.
+//
+//     cp Config/Signing.example.xcconfig Config/Signing.xcconfig
+//
+// Find your Team ID in Xcode > Settings > Accounts (select your Apple ID, the
+// team list shows it), or at developer.apple.com/account under Membership.
+//
+// Signing this app for a device needs a paid Apple Developer Program
+// membership: the Family Controls and NFC Tag Reading capabilities are not
+// available to free personal teams.
+
+DEVELOPMENT_TEAM =

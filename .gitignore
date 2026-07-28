@@ -1,0 +1,53 @@
+# macOS
+.DS_Store
+
+# The Xcode project is GENERATED from project.yml by XcodeGen — it is not a
+# source file. It also embeds DEVELOPMENT_TEAM in TargetAttributes, so keeping
+# it out of git is both correct and keeps the team identifier local.
+#   brew install xcodegen && xcodegen generate
+*.xcodeproj/
+*.xcworkspace/
+
+# Xcode — user state and build output
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+*.xccheckout
+DerivedData/
+build/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Signing — LOCAL ONLY, never commit.
+# Copy Config/Signing.example.xcconfig to Config/Signing.xcconfig and put your
+# own Apple Developer Team ID in it.
+Config/Signing.xcconfig
+
+# Credentials and signing material of any kind
+*.mobileprovision
+*.provisionprofile
+*.p12
+*.pfx
+*.cer
+*.certSigningRequest
+*.pem
+*.key
+*.keychain
+*.keychain-db
+.env
+.env.*
+!.env.example
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+Package.resolved
+
+# Fastlane / CI artifacts
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
