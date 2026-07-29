@@ -102,6 +102,10 @@ enum SharedLockStore {
     // MARK: - NFC card
 
     /// Set once the identifier has been written to a physical card.
+    ///
+    /// Superseded by `CardRegistry`, which keeps the same answer in the keychain
+    /// so it survives reinstalling the app. Still written to so the two agree,
+    /// and still read once to migrate anyone upgrading.
     static var cardProvisioned: Bool {
         get { defaults.bool(forKey: Key.cardProvisioned) }
         set { defaults.set(newValue, forKey: Key.cardProvisioned) }

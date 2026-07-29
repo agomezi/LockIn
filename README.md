@@ -54,6 +54,51 @@ shared state rather than from the card, so the two can't drift out of sync.
 
 Mifare Classic tags do **not** work — iPhones can't read them.
 
+### Tapping the card without opening the app
+
+`Brickable/LockIn/BrickIntents.swift` exposes two App Intents that flip the lock
+in a background launch of the app — no UI, no notification to dismiss:
+
+| Intent | What it does |
+|---|---|
+| **Brick My Phone** | Raises the shield. Tapping again leaves it up. |
+| **Toggle Brick** | Same flip as an in-app card tap. |
+
+Either one posts a local notification — *Locked in for 1 hour · Unlocks at 7:32 PM,
+or tap your card again* — because a Shortcuts automation runs the intent silently
+and its spoken dialog only surfaces when Siri was the one asking.
+
+Wire one to the card with a Shortcuts automation, on the phone:
+
+1. **Shortcuts → Automation → + → NFC → Scan**, hold the card against the phone,
+   name it.
+2. Add the **Toggle Brick** action (search "Brick") — or **Brick My Phone** for a
+   lock-only tap.
+3. Turn **Ask Before Running** off and pick **Run Immediately**.
+
+After that a tap anywhere in iOS flips the lock in about a second. Allow
+notifications when the app asks, or the tap does its job with nothing to show for
+it.
+
+Two things worth knowing:
+
+- **The screen has to be on and unlocked.** Third-party apps can't read NFC on a
+  sleeping or locked phone — Express Mode is Wallet/HomeKit only — so there is no
+  way to make a tap work from a pocket.
+- Shortcuts matches the card by its **hardware UID**, not by the identifier that
+  *Set Up Card* wrote, so the two paths are independent and the in-app scan still
+  verifies the payload.
+
+**Brick My Phone** is the stricter option: any shortcut can also be run by hand
+from the Shortcuts app, so automating **Toggle Brick** means there is a way out of
+the block that doesn't need the physical card. Unlocking in the app, the
+auto-unlock timer, and Siri ("Hey Siri, brick my phone") all still work either
+way.
+
+The automation stores the intent's identifier, so reinstalling or updating the app
+keeps it working — but renaming `StartBrickIntent` / `ToggleBrickIntent` breaks it
+and the automation has to be rebuilt.
+
 ## Tests
 
 ```sh

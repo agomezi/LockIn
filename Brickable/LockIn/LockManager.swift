@@ -47,16 +47,34 @@ final class LockManager {
     /// nonisolated and still has to be able to stop the run loop source.
     @ObservationIgnored private nonisolated(unsafe) var ticker: Timer?
 
+    /// Same reasoning as `ticker`: only used on the main actor, but `deinit` has
+    /// to be able to unregister.
+    @ObservationIgnored private nonisolated(unsafe) var lockChangeObserver: NSObjectProtocol?
+
     init() {
         authorizationStatus = AuthorizationCenter.shared.authorizationStatus
         lockState = SharedLockStore.lockState
         selection = SharedLockStore.selection
         autoUnlockMinutes = SharedLockStore.autoUnlockMinutes
-        cardProvisioned = SharedLockStore.cardProvisioned
+        cardProvisioned = CardRegistry.isProvisioned
+
+        // A card tap handled by an App Intent can land while Lock In is already
+        // on screen. That's a background launch of this same process, so no
+        // foregrounding happens to pull the new state in — this does.
+        lockChangeObserver = NotificationCenter.default.addObserver(
+            forName: .brickableLockDidChange,
+            object: nil,
+            queue: nil
+        ) { [weak self] _ in
+            Task { @MainActor in self?.refresh() }
+        }
     }
 
     deinit {
         ticker?.invalidate()
+        if let lockChangeObserver {
+            NotificationCenter.default.removeObserver(lockChangeObserver)
+        }
     }
 
     var isAuthorized: Bool { authorizationStatus == .approved }
@@ -88,7 +106,14 @@ final class LockManager {
         lockState = SharedLockStore.lockState
         selection = SharedLockStore.selection
         autoUnlockMinutes = SharedLockStore.autoUnlockMinutes
-        cardProvisioned = SharedLockStore.cardProvisioned
+        cardProvisioned = CardRegistry.isProvisioned
+
+        // Once there's a card, a tap can flip the lock with no UI on screen, and
+        // the notification is the only feedback. Asking here is a no-op after the
+        // first answer.
+        if cardProvisioned {
+            LockNotifier.requestAuthorizationIfNeeded()
+        }
 
         updateRemaining()
         syncTicker()
@@ -146,7 +171,7 @@ final class LockManager {
 
                 switch result {
                 case .success:
-                    SharedLockStore.cardProvisioned = true
+                    CardRegistry.isProvisioned = true
                     self.cardProvisioned = true
                     self.banner = .success("Card set up. Tap it to lock in.")
                 case .failure(let error):
@@ -177,6 +202,13 @@ final class LockManager {
 
                 switch result {
                 case .success:
+                    // The scan just proved a real lock card exists, so repair the
+                    // flag if it was ever lost. Cheaper than making the user walk
+                    // through Set Up Card again for a card that already works.
+                    if !self.cardProvisioned {
+                        CardRegistry.isProvisioned = true
+                        self.cardProvisioned = true
+                    }
                     self.toggleLock()
                 case .failure(let error):
                     self.report(error)
@@ -191,6 +223,10 @@ final class LockManager {
             lockState = outcome.state
             updateRemaining()
             syncTicker()
+
+            // The banner below is the feedback for an in-app tap, so retire any
+            // notification an earlier background tap left in the tray.
+            LockNotifier.clear()
 
             if outcome.state.isLocked {
                 banner = outcome.timeoutScheduled

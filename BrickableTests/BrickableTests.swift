@@ -553,3 +553,31 @@ final class LockStateTests: XCTestCase {
         XCTAssertLessThanOrEqual(AutoUnlock.defaultMinutes, AutoUnlock.maximumMinutes)
     }
 }
+
+// MARK: - Tap notification wording
+
+/// The "Locked in for …" notification is the only feedback a card tap gives when
+/// the app isn't on screen, so the phrasing is worth pinning.
+final class LockNotifierTests: XCTestCase {
+
+    func testMinutesUnderAnHourReadAsMinutes() {
+        XCTAssertEqual(LockNotifier.durationDescription(15), "15 minutes")
+        XCTAssertEqual(LockNotifier.durationDescription(45), "45 minutes")
+    }
+
+    func testWholeHoursDropTheMinutes() {
+        XCTAssertEqual(LockNotifier.durationDescription(60), "1 hour")
+        XCTAssertEqual(LockNotifier.durationDescription(120), "2 hours")
+    }
+
+    func testMixedDurationsKeepBothParts() {
+        XCTAssertEqual(LockNotifier.durationDescription(90), "1 hour 30 min")
+        XCTAssertEqual(LockNotifier.durationDescription(185), "3 hours 5 min")
+    }
+
+    func testTheWholeSchedulableRangeProducesSomething() {
+        for minutes in AutoUnlock.minimumMinutes...AutoUnlock.maximumMinutes {
+            XCTAssertFalse(LockNotifier.durationDescription(minutes).isEmpty)
+        }
+    }
+}
