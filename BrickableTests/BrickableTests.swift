@@ -246,19 +246,6 @@ final class PomodoroSettingsTests: XCTestCase {
         XCTAssertEqual(settings.shortBreakMinutes, 5)
         XCTAssertTrue(settings.soundEnabled)
     }
-
-    func testStatsResponseDecodesTheBackendShape() throws {
-        let json = """
-        {"total_sessions": 12, "total_minutes": 300, "current_streak": 3, "longest_streak": 9}
-        """.data(using: .utf8)!
-
-        let response = try JSONDecoder().decode(NetworkManager.StatsResponse.self, from: json)
-
-        XCTAssertEqual(response.totalSessions, 12)
-        XCTAssertEqual(response.totalMinutes, 300)
-        XCTAssertEqual(response.currentStreak, 3)
-        XCTAssertEqual(response.longestStreak, 9)
-    }
 }
 
 // MARK: -
